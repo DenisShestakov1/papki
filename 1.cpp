@@ -2,23 +2,23 @@
 #include <fstream> 
 #include <string>   
 void generateNames(std::string uniqueChars, int length, std::string& name, std::ofstream& logFile, int& fileCount) {
-    // Функция для генерации имен файлов и папок.
+   
 
-    for (char c : uniqueChars) { // Для каждого символа 'c' в строке 'uniqueChars' выполняем следующий блок кода.
-        std::string newName = name + c; // Создаем новое имя, добавляя 'c' к текущему 'name'.
+    for (char c : uniqueChars) {
+        std::string newName = name + c; 
 
-        if (length == 1) { // Если длина 'length' равна 1, то выполняем следующий блок кода (генерация имен файлов).
+        if (length == 1) { 
         
-                std::cout << "Создан файл " << newName << std::endl; // Выводим сообщение о создании файла в консоль.
-                logFile << "Создан файл " << newName << std::endl;   // Записываем сообщение о создании файла в файл лога.
-                fileCount--; // Уменьшаем счетчик оставшихся файлов.
+                std::cout << "Создан файл " << newName << std::endl; 
+                logFile << "Создан файл " << newName << std::endl;  
+                fileCount--; 
             
         }
-        else { // Иначе (для длины 'length' больше 1) выполняем следующий блок кода (генерация имен папок).
-            std::cout << "Создана папка " << newName << std::endl; // Выводим сообщение о создании папки в консоль.
-            logFile << "Создана папка " << newName << std::endl;   // Записываем сообщение о создании папки в файл лога.
+        else { 
+            std::cout << "Создана папка " << newName << std::endl; 
+            logFile << "Создана папка " << newName << std::endl;   
 
-            // Рекурсивно генерируем имена для содержимого папки.
+       
             generateNames(uniqueChars, length - 1, newName, logFile, fileCount);
         }
     }
