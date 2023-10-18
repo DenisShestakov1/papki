@@ -2,12 +2,11 @@
 #include <string>
 #include <fstream>
 #include <ctime>
-#define _CRT_SECURE_NO_WARNINGS
 #pragma warning(disable : 4996).
 class NameGenerator {
 public:
-    NameGenerator(const std::string& characters, int maxLength)
-        : characters(characters), maxLength(maxLength) {}
+    NameGenerator(const std::string& characters, int maxLength ,int minLength)
+        : characters(characters), maxLength(maxLength), minLength(minLength) {}
 
     void GenerateNames(std::ofstream& logFile) {
         std::string currentName;
@@ -15,25 +14,25 @@ public:
     }
 
 private:
-    void GenerateNamesRecursive(std::string& currentName, int currentIndex, std::ofstream& logFile) {
-        if (currentIndex >= maxLength) {
-            // Ограничиваем длину имени до 255 символов
+    void GenerateNamesRecursive(std::string& currentName, int currentIndex, std::ofstream& logFile ) {
+        if (currentIndex >= maxLength && currentName.length() >= minLength) {
+            std::string folderName != currentName;
             currentName.resize(255);
 
-            // Создание папки
+
             std::cout << "Создана папка [" << currentName << "]" << std::endl;
             logFile << "Создана папка [" << currentName << "]" << std::endl;
 
-            // Получение текущего времени
             std::time_t currentTime = std::time(nullptr);
             std::tm* localTime = std::localtime(&currentTime);
 
-            // Форматирование времени для добавления к именам файлов
-            char timeStr[20];
-            std::strftime(timeStr, sizeof(timeStr), "%Y%m%d%H%M%S", localTime);
 
-            // Создание файла в папке с добавлением времени
+            char timeStr[20];
+            std::strftime(timeStr, sizeof(timeStr), "%Y.%m.%d.%H.%M", localTime);
+
+
             for (int i = 0; i < maxLength; i++) {
+
                 std::string fileName = currentName + "_" + timeStr + ".txt";
                 std::cout << "В папке [" << currentName << "] создан файл [" << fileName << "]" << std::endl;
                 logFile << "В папке [" << currentName << "] создан файл [" << fileName << "]" << std::endl;
@@ -51,7 +50,9 @@ private:
 
 private:
     const std::string characters;
-    const int maxLength;
+   
+    const int maxLength = 0;
+    const int minLength = 0;
 };
 
 int main() {
@@ -59,7 +60,7 @@ int main() {
     std::string folderChars, fileChars;
     int folderCount, fileCount;
 
-    // Ввод символов для названия папок и файлов
+    
     std::cout << "Введите уникальные символы для названия папок: ";
     std::cin >> folderChars;
 
@@ -72,24 +73,24 @@ int main() {
     std::cout << "Введите количество файлов: ";
     std::cin >> fileCount;
 
-    // Открываем файл лога для записи
     std::ofstream logFile("log.txt");
     if (!logFile.is_open()) {
         std::cerr << "Ошибка открытия файла лога." << std::endl;
         return 1;
     }
 
-    NameGenerator folderNameGenerator(folderChars, folderCount);
-    NameGenerator fileNameGenerator(fileChars, fileCount);
+    NameGenerator folderNameGenerator(folderChars,2, folderCount);
+    NameGenerator fileNameGenerator(fileChars,2, fileCount);
 
 
-    // Передаем файл лога для записи
+   
     folderNameGenerator.GenerateNames(logFile);
     fileNameGenerator.GenerateNames(logFile);
 
-    // Закрываем файл лога
+   
     logFile.close();
 
 
     return 0;
 }
+
