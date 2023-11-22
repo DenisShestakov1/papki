@@ -1,96 +1,119 @@
 #include <iostream>
-#include <string>
+#include <vector>
+#include <algorithm>
 #include <fstream>
 #include <ctime>
 
-class NameGenerator {
+#define MAX_SIZE 20
+
+using namespace std;
+
+struct SymbolData {
+    char symbol;
+    int count;
+};
+
+int get_max_ind(const vector<SymbolData>& data) {
+    int sum = 0;
+    for (size_t i = 1; i < data.size(); ++i) {
+        sum += data[i].count;
+    }
+    return MAX_SIZE - sum;
+}
+
+void add_symbol(string& result, vector<SymbolData>& data) {
+    int max_ind = get_max_ind(data);
+    if (max_ind == 1) return;
+
+    for (const auto& symbol : data) {
+        if (symbol.count > MAX_SIZE) break;
+        result.append(symbol.count, symbol.symbol);
+    }
+}
+
+void add_ind(vector<SymbolData>& data) {
+    int max_ind = get_max_ind(data);
+    if (max_ind == 1) return;
+    ++data.front().count;
+
+    for (auto it = data.begin(); it != prev(data.end()); ++it) {
+        if (it->count == max_ind) {
+            it->count = 1;
+            (++it)->count++;
+            --it;
+        }
+    }
+}
+
+class Logger {
 public:
-    NameGenerator(const std::string& characters, int maxLength, int minLength)
-        : characters(characters), maxLength(maxLength), minLength(minLength) {}
+    Logger(const string& filename) {
+        logFile.open(filename, ios::app);
+    }
 
-    void GenerateNames(std::ofstream& logFile) {
-        std::string currentName;
-        int currentIndex = 0;
+    ~Logger() {
+        if (logFile.is_open()) {
+            logFile.close();
+        }
+    }
 
-        while (currentIndex < maxLength) {
-            if (currentName.length() >= minLength) {
-                std::string folderName = currentName;
-                if (folderName.length() > maxLength) {
-                    folderName = folderName.substr(0, maxLength);
-                }
+    void Log(const string& message) {
+        if (logFile.is_open()) {
+            time_t currentTime = time(nullptr);
+            tm* localTime = localtime(&currentTime);
 
-                std::cout << "Создана папка [" << folderName << "]" << std::endl;
-                logFile << "Создана папка [" << folderName << "]" << std::endl;
+            char timeStr[20];
+            strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", localTime);
 
-                std::time_t currentTime = std::time(nullptr);
-                std::tm* localTime = std::localtime(&currentTime);
-
-                char timeStr[20];
-                std::strftime(timeStr, sizeof(timeStr), "%Y.%m.%d.%H.%M", localTime);
-
-                for (int i = 0; i < maxLength; i++) {
-                    std::string fileName = folderName + "_" + timeStr + ".txt";
-                    std::cout << "В папке [" << folderName << "] создан файл [" << fileName << "]" << std::endl;
-                    logFile << "В папке [" << folderName << "] создан файл [" << fileName << "]" << std::endl;
-                }
-            }
-
-            currentName.push_back(characters[currentIndex]);
-            currentIndex++;
-
-            if (currentIndex == characters.length()) {
-                if (currentName.length() == 0) {
-                    break;
-                }
-
-                char lastChar = currentName.back();
-                currentName.pop_back();
-
-                while (!currentName.empty() && currentName.back() == lastChar) {
-                    lastChar = currentName.back();
-                    currentName.pop_back();
-                }
-            }
+            logFile << "[" << timeStr << "] " << message << endl;
         }
     }
 
 private:
-    const std::string characters;
-    const int maxLength;
-    const int minLength;
+    ofstream logFile;
 };
 
 int main() {
-    setlocale(LC_ALL, "RUS");
-    std::string folderChars, fileChars;
-    int folderCount, fileCount;
+    int quantity_folder;
+    int quantity_file;
+    string folder_symbols;
+    string file_symbols;
 
-    std::cout << "Введите уникальные символы для названия папок: ";
-    std::cin >> folderChars;
+    cout << "Введите символы для папок:\n>>"; cin >> folder_symbols;
+    cout << "Введите количество папок:\n>>"; cin >> quantity_folder;
+    cout << "Введите символы для файлов:\n>>"; cin >> file_symbols;
+    cout << "Введите количество файлов:\n>>"; cin >> quantity_file;
 
-    std::cout << "Введите количество папок: ";
-    std::cin >> folderCount;
+    string arr_folder[quantity_folder];
+    string arr_file[quantity_file];
 
-    std::cout << "Введите уникальные символы для названия файлов: ";
-    std::cin >> fileChars;
+    vector<SymbolData> folder_data;
+    for (char sym : folder_symbols) folder_data.push_back({ sym, 1 });
 
-    std::cout << "Введите количество файлов: ";
-    std::cin >> fileCount;
+    vector<SymbolData> file_data;
+    for (char sym : file_symbols) file_data.push_back({ sym, 1 });
 
-    std::ofstream logFile("log.txt");
-    if (!logFile.is_open()) {
-        std::cerr << "Ошибка открытия файла лога." << std::endl;
-        return 1;
+    Logger folderLogger("folder_log.txt");
+
+    for (int i = 0; i != quantity_folder; ++i) {
+        string folder_result;
+        add_symbol(folder_result, folder_data);
+        add_ind(folder_data);
+        arr_folder[i] = folder_result;
+
+        cout << "Создана папка: " << arr_folder[i] << '\n';
+        folderLogger.Log("Создана папка: " + arr_folder[i]);
+
+        for (int j = 0; j != quantity_file; ++j) {
+            string file_result;
+            add_symbol(file_result, file_data);
+            add_ind(file_data);
+            arr_file[j] = file_result;
+
+            cout << "В папке " << arr_folder[i] << " создан файл: " << arr_file[j] << '\n';
+            folderLogger.Log("В папке " + arr_folder[i] + " создан файл: " + arr_file[j]);
+        }
     }
-
-    NameGenerator folderNameGenerator(folderChars, 2, folderCount);
-    NameGenerator fileNameGenerator(fileChars, 2, fileCount);
-
-    folderNameGenerator.GenerateNames(logFile);
-    fileNameGenerator.GenerateNames(logFile);
-
-    logFile.close();
 
     return 0;
 }
-
